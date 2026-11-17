@@ -168,7 +168,12 @@ def check_rootkit_and_malware():
     print_subsection("Running rkhunter (rootkit hunter)")
     if shutil.which("rkhunter"):
         print("Running rkhunter scan (this may take 5-15 minutes)...")
-        run_command("sudo rkhunter --check --skip-keypress", capture_output=False)
+        # Filter out grep/egrep warnings from rkhunter's internal checks (known issue with grep 3.8+)
+        rkhunter_cmd = (
+            "sudo rkhunter --check --skip-keypress 2>&1 | "
+            "grep -v -E '^(grep|egrep): warning: (stray \\\\\\\\ before |egrep is obsolescent)'"
+        )
+        run_command(rkhunter_cmd, capture_output=False)
         print("rkhunter check completed.")
         print("Results logged to /var/log/rkhunter.log")
         rkhunter_result = None  # or read log file if you need it
