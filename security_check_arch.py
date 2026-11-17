@@ -169,9 +169,11 @@ def check_rootkit_and_malware():
     if shutil.which("rkhunter"):
         print("Running rkhunter scan (this may take 5-15 minutes)...")
         # Filter out grep/egrep warnings from rkhunter's internal checks (known issue with grep 3.8+)
+        # Matches: "grep: warning: stray \ before -" and "grep: warning: stray \ before +" etc.
+        # And: "egrep: warning: egrep is obsolescent; using grep -E"
         rkhunter_cmd = (
             "sudo rkhunter --check --skip-keypress 2>&1 | "
-            "grep -v -E '^(grep|egrep): warning: (stray \\\\\\\\ before |egrep is obsolescent)'"
+            "grep -v -E '^(grep|egrep): warning: (stray \\\\\\\\ before .|egrep is obsolescent)'"
         )
         run_command(rkhunter_cmd, capture_output=False)
         print("rkhunter check completed.")
