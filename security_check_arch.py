@@ -168,14 +168,14 @@ def check_rootkit_and_malware():
     print_subsection("Running rkhunter (rootkit hunter)")
     if shutil.which("rkhunter"):
         print("Running rkhunter scan (this may take 5-15 minutes)...")
-        # Filter out grep/egrep warnings from rkhunter's internal checks (known issue with grep 3.8+)
-        # Using grep -F (fixed strings) to match literal "stray \ before " and "egrep is obsolescent"
-        rkhunter_cmd = (
-            "sudo rkhunter --check --skip-keypress 2>&1 | "
-            "grep -v -F 'stray \\\\ before ' | "
-            "grep -v -F 'egrep is obsolescent'"
-        )
-        run_command(rkhunter_cmd, capture_output=False)
+        # Capture output in Python to filter rkhunter's internal grep/egrep warnings
+        # (these come from child processes and bypass shell pipes when capture_output=False)
+        rkhunter_output = run_command("sudo rkhunter --check --skip-keypress 2>&1", capture_output=True)
+        if rkhunter_output:
+            # Filter out grep/egrep warnings (known issue with grep 3.8+)
+            for line in rkhunter_output.split('\n'):
+                if 'stray \\ before ' not in line and 'egrep is obsolescent' not in line:
+                    print(line)
         print("rkhunter check completed.")
         print("Results logged to /var/log/rkhunter.log")
         rkhunter_result = None  # or read log file if you need it
